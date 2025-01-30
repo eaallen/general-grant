@@ -1,12 +1,32 @@
 (function(){
     // Create container div
-
     const homeUrl = 'https://localhost:5173/bookmarklet/hackathon';
+
+    // Create toggle button that stays visible
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = '×';
+    toggleBtn.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 30px;
+        height: 30px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+    `;
 
     const container = document.createElement('div');
     container.style.cssText = `
         position: fixed;
-        top: 20px;
+        top: 60px;
         right: 20px;
         background: white;
         padding: 15px;
@@ -14,9 +34,29 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         z-index: 10000;
         width: 200px;
+        display: none;
     `;
 
+    // Toggle container visibility
+    let isOpen = false;
+    toggleBtn.addEventListener('click', () => {
+        isOpen = !isOpen;
+        container.style.display = isOpen ? 'block' : 'none';
+        toggleBtn.textContent = isOpen ? '×' : '+';
+    });
+
     // Create and add logo
+    const title = document.createElement('h2');
+    title.textContent = 'GENeral Grant';
+    title.style.cssText = `
+        text-align: center;
+        margin: 0 0 15px 0;
+        color: #333;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+    `;
+    container.appendChild(title);
+
     const logo = document.createElement('img');
     logo.src = `${homeUrl}/logo.png`;
     logo.alt = 'Logo';
@@ -72,7 +112,7 @@
         console.log(input1.value);
         
         
-        const url = new URL('https://script.google.com/macros/s/AKfycbyzLtFLiB8aCsqSg1uowAodmzdEON5EYzZAZRN1iadqyGZLDOnW2hXw6LVLjtTNqYUdWw/exec');
+        const url = new URL('https://script.google.com/macros/s/AKfycbwEkh0AzIF58vewzGhAh-kfGvpbV2WHCzBflBgRjlxKBEBmgCF6mO8D-ub2vpjfBcXd3w/exec');
         const context = input1.value;
         input1.value = '';
         url.searchParams.set('context', context);
@@ -104,6 +144,10 @@
     container.appendChild(input1);
     container.appendChild(submitBtn);
 
-    // Add container to page
+    // Add container and toggle button to page
     document.body.appendChild(container);
+    document.body.appendChild(toggleBtn);
+    
+    // Show container initially
+    toggleBtn.click();
 })();
