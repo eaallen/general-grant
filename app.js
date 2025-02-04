@@ -1,6 +1,13 @@
 (function(){
+    // Get configuration from the page context
+    const config =  {
+        apiEndpoint: window.GRANT_CONFIG.apiEndpoint,
+        title: 'GENeral Grant',
+        contextData: window.GRANT_CONFIG.contextData
+    };
+
     // Create container div
-    const homeUrl = 'https://localhost:5173/bookmarklet/hackathon';
+    const homeUrl = `${window.GRANT_CONFIG.hostUrl}/hackathon`;
 
     // Create toggle button that stays visible
     const toggleBtn = document.createElement('button');
@@ -33,29 +40,35 @@
         border-radius: 5px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         z-index: 10000;
-        width: 200px;
+        min-width: 200px;
+        max-width: 800px;
+        width: fit-content;
         display: none;
+        overflow: visible;
     `;
 
-    // Toggle container visibility
-    let isOpen = false;
-    toggleBtn.addEventListener('click', () => {
-        isOpen = !isOpen;
-        container.style.display = isOpen ? 'block' : 'none';
-        toggleBtn.textContent = isOpen ? '×' : '+';
-    });
+    // Create a content wrapper to help with sizing
+    const contentWrapper = document.createElement('div');
+    contentWrapper.style.cssText = `
+        width: 300px;
+        min-width: 200px;
+        max-width: 800px;
+    `;
+    container.appendChild(contentWrapper);
 
     // Create and add logo
     const title = document.createElement('h2');
-    title.textContent = 'GENeral Grant';
+    title.textContent = config.title;
     title.style.cssText = `
         text-align: center;
         margin: 0 0 15px 0;
         color: #333;
         font-family: Arial, sans-serif;
         font-size: 18px;
+        cursor: move;
+        width: 100%;
     `;
-    container.appendChild(title);
+    contentWrapper.appendChild(title);
 
     const logo = document.createElement('img');
     logo.src = `${homeUrl}/logo.png`;
@@ -68,11 +81,12 @@
         margin: 0 auto 15px auto;
         display: block;
     `;
-    container.appendChild(logo);
+    contentWrapper.appendChild(logo);
 
     // Create input fields
     const input1 = document.createElement('textarea');
     input1.placeholder = 'Enter text...';
+    input1.value = config.contextData || '';
     input1.style.cssText = `
         width: 100%;
         margin-bottom: 10px;
@@ -81,16 +95,11 @@
         border-radius: 4px;
         box-sizing: border-box;
         min-height: 60px;
-        max-height: 200px;
-        resize: none;
-        overflow-y: hidden;
+        height: 120px;
+        resize: vertical;
+        overflow-y: auto;
     `;
-
-    // Add auto-grow functionality
-    input1.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
+    contentWrapper.appendChild(input1);
 
     // Create submit button
     const submitBtn = document.createElement('button');
@@ -104,6 +113,56 @@
         border-radius: 4px;
         cursor: pointer;
     `;
+    contentWrapper.appendChild(submitBtn);
+
+    // Toggle container visibility
+    let isOpen = false;
+    toggleBtn.addEventListener('click', () => {
+        isOpen = !isOpen;
+        container.style.display = isOpen ? 'block' : 'none';
+        toggleBtn.textContent = isOpen ? '×' : '+';
+    });
+
+    // Make container draggable
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+
+    title.addEventListener('mousedown', dragStart);
+
+    function dragStart(e) {
+        initialX = e.clientX - container.offsetLeft;
+        initialY = e.clientY - container.offsetTop;
+        
+        if (e.target === title) {
+            isDragging = true;
+        }
+    }
+
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    function drag(e) {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            
+            // Keep within viewport bounds
+            currentX = Math.min(Math.max(0, currentX), window.innerWidth - container.offsetWidth);
+            currentY = Math.min(Math.max(0, currentY), window.innerHeight - container.offsetHeight);
+            
+            container.style.left = currentX + 'px';
+            container.style.top = currentY + 'px';
+            container.style.right = 'auto';
+        }
+    }
+
+    function dragEnd() {
+        isDragging = false;
+    }
 
     // Add click handler
     submitBtn.addEventListener('click', async () => {
@@ -111,8 +170,7 @@
 
         console.log(input1.value);
         
-        
-        const url = new URL('https://script.google.com/macros/s/AKfycbwEkh0AzIF58vewzGhAh-kfGvpbV2WHCzBflBgRjlxKBEBmgCF6mO8D-ub2vpjfBcXd3w/exec');
+        const url = new URL(config.apiEndpoint);
         const context = input1.value;
         input1.value = '';
         url.searchParams.set('context', context);
@@ -139,10 +197,6 @@
             submitBtn.disabled = false;
         }
     });
-
-    // Append elements to container
-    container.appendChild(input1);
-    container.appendChild(submitBtn);
 
     // Add container and toggle button to page
     document.body.appendChild(container);
